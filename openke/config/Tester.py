@@ -39,6 +39,9 @@ class Tester(object):
         self.data_loader = data_loader
         self.use_gpu = use_gpu
 
+        self.parameter_lists = {"ent_embeddings":self.model.ent_embeddings, \
+								"rel_embeddings":self.model.rel_embeddings}
+
         if self.use_gpu:
             self.model.cuda()
 
@@ -149,3 +152,37 @@ class Tester(object):
                 total_current += 1.0
 
         return acc, threshlod
+
+
+    def get_parameters(self, params, mode="torch"):
+       
+        param_dict = params
+        for param in param_dict:
+            param_dict[param] = param_dict[param].cpu()
+        res = {}
+        for param in param_dict:
+            if mode == "torch":
+                res[param] = param_dict[param]
+            elif mode == "list":
+                res[param] = param_dict[param].tolist()
+            else:
+                res[param] = param_dict[param]
+        return res
+
+
+
+    def save_embedding_matrix(self):
+        # path = os.path.join(os.getcwd()+'/../../checkpoint', "emb.json")
+        # f = open(path, "w")
+        # f.write(json.dumps(self.get_parameters(best_model, "list")))
+        # f.close()
+        # with open(os.path.join(os.getcwd()+'/checkpoint', "emb.json"), 'w') as f:
+            # f.write(json.dumps(self.get_parameters(self.parameter_lists)))
+        res = self.get_parameters(self.parameter_lists)
+        for param in res:
+            torch.save(res[param], '{}.pt'.format(param))
+
+
+
+    def save_emb(self):
+        self.save_embedding_matrix()
