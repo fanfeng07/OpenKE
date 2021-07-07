@@ -37,7 +37,7 @@ class TrainDataLoader(object):
 		filter_flag = True,
 		neg_ent = 1,
 		neg_rel = 0):
-		
+		print('get input args')
 		base_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "../release/Base.so"))
 		self.lib = ctypes.cdll.LoadLibrary(base_file)
 		"""argtypes"""
@@ -59,6 +59,7 @@ class TrainDataLoader(object):
 		self.ent_file = ent_file
 		self.rel_file = rel_file
 		if in_path != None:
+			print('in path is ', in_path)
 			self.tri_file = in_path + "train2id.txt"
 			self.ent_file = in_path + "entity2id.txt"
 			self.rel_file = in_path + "relation2id.txt"
@@ -72,10 +73,12 @@ class TrainDataLoader(object):
 		self.negative_rel = neg_rel
 		self.sampling_mode = sampling_mode
 		self.cross_sampling_flag = 0
+		print('start self read function')
 		self.read()
 
 	def read(self):
 		if self.in_path != None:
+			# print('test 1')
 			self.lib.setInPath(ctypes.create_string_buffer(self.in_path.encode(), len(self.in_path) * 2))
 		else:
 			self.lib.setTrainPath(ctypes.create_string_buffer(self.tri_file.encode(), len(self.tri_file) * 2))
@@ -83,19 +86,23 @@ class TrainDataLoader(object):
 			self.lib.setRelPath(ctypes.create_string_buffer(self.rel_file.encode(), len(self.rel_file) * 2))
 		
 		self.lib.setBern(self.bern)
+		# print('test2')
 		self.lib.setWorkThreads(self.work_threads)
+		# print('test3')
 		self.lib.randReset()
+		print('test3.5')
 		self.lib.importTrainFiles()
+		print('test4')
 		self.relTotal = self.lib.getRelationTotal()
 		self.entTotal = self.lib.getEntityTotal()
 		self.tripleTotal = self.lib.getTrainTotal()
-
+		print('test5')
 		if self.batch_size == None:
 			self.batch_size = self.tripleTotal // self.nbatches
 		if self.nbatches == None:
 			self.nbatches = self.tripleTotal // self.batch_size
 		self.batch_seq_size = self.batch_size * (1 + self.negative_ent + self.negative_rel)
-
+		print('test6')
 		self.batch_h = np.zeros(self.batch_seq_size, dtype=np.int64)
 		self.batch_t = np.zeros(self.batch_seq_size, dtype=np.int64)
 		self.batch_r = np.zeros(self.batch_seq_size, dtype=np.int64)
@@ -104,7 +111,7 @@ class TrainDataLoader(object):
 		self.batch_t_addr = self.batch_t.__array_interface__["data"][0]
 		self.batch_r_addr = self.batch_r.__array_interface__["data"][0]
 		self.batch_y_addr = self.batch_y.__array_interface__["data"][0]
-
+		print('done with read')
 	def sampling(self):
 		self.lib.sampling(
 			self.batch_h_addr,
